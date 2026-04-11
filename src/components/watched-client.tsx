@@ -9,6 +9,8 @@ const AGREEMENT_BUTTONS = [
   { label: '⚔️ Disagreed', value: 'disagreed' },
 ]
 
+type AgreementFilter = 'agreed' | 'disagreed'
+
 interface WatchedClientProps {
   movies: Movie[]
   userNames: Record<User, string>
@@ -16,7 +18,7 @@ interface WatchedClientProps {
 
 export function WatchedClient({ movies, userNames }: WatchedClientProps) {
   const [search, setSearch] = useState('')
-  const [activeAgreement, setActiveAgreement] = useState<string | null>(null)
+  const [activeAgreement, setActiveAgreement] = useState<AgreementFilter | null>(null)
 
   const lowerSearch = search.toLowerCase()
   const filteredMovies = movies.filter((m) => {
@@ -35,7 +37,7 @@ export function WatchedClient({ movies, userNames }: WatchedClientProps) {
         onSearchChange={setSearch}
         buttons={AGREEMENT_BUTTONS}
         activeButton={activeAgreement}
-        onButtonChange={setActiveAgreement}
+        onButtonChange={(v) => setActiveAgreement(v as AgreementFilter | null)}
       />
 
       {filteredMovies.length === 0 ? (
