@@ -1,0 +1,103 @@
+# Date Night
+
+A home-lab web app for Ian and Krista to manage their [Criterion Collection](https://www.criterion.com) date night movie watchlist.
+
+Runs in Docker alongside their *arr stack. Add movies by pasting an IMDB or Criterion URL, drag to set the watch order, and the app automatically queues downloads via Seerr and keeps a "Date Night" Plex playlist in sync.
+
+## Features
+
+- **Add movies** by pasting an IMDB or Criterion Collection URL — metadata pulled from TMDB automatically
+- **Drag to reorder** the watchlist (dnd-kit sortable)
+- **Seerr integration** — top 10 unwatched movies are automatically requested for download; status shown per movie (Queued / Downloading / Ready)
+- **Plex integration** — a "Date Night" playlist is kept in sync with available movies in watch order
+- **Blind ratings** — Ian and Krista each submit a star rating (1–5) and a critic's quote independently; results are revealed only after both have rated
+- **Ask Claude** — sidebar link opens Claude with a pre-filled recommendation prompt based on recently watched films
+- **Warm amber theme** — cozy UI, not a media server dashboard
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS + shadcn/ui |
+| Drag & drop | dnd-kit |
+| Database | SQLite via Prisma ORM |
+| Background jobs | node-cron (inside the Next.js server process) |
+| Runtime | tsx (TypeScript execution) |
+| Tests | Vitest + Testing Library |
+| Container | Docker (single Alpine image) |
+
+## Configuration
+
+All secrets are passed as environment variables. Copy `.env.example` to `.env.local` for local development:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | SQLite path — `file:./data/datenight.db` locally, `file:/app/data/datenight.db` in Docker |
+| `TMDB_API_KEY` | [TMDB API v3 key](https://developer.themoviedb.org/docs/getting-started) (free) |
+| `SEERR_URL` | Base URL of your Seerr instance, e.g. `http://seerr:5055` |
+| `SEERR_API_KEY` | Seerr API key (Settings → API Key) |
+| `PLEX_URL` | Base URL of your Plex server, e.g. `http://plex:32400` |
+| `PLEX_TOKEN` | [Plex authentication token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) |
+
+## Running Locally
+
+```bash
+# Install dependencies
+npm install
+
+# Set up the database
+npx prisma migrate dev
+
+# Start the dev server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Running in Docker
+
+```bash
+# Build the image
+docker build -t datenight .
+
+# Or use docker compose (edit the volume path in docker-compose.yml first)
+docker compose up -d
+```
+
+The container runs `prisma migrate deploy` on startup before serving traffic.
+
+## Tests
+
+```bash
+npm run test:run   # run all tests once
+npm test           # watch mode
+```
+
+## Project Structure
+
+```
+src/
+  app/
+    api/           # Next.js API routes
+    watchlist/     # Draggable watch list page
+    watched/       # Grid of watched + reviewed movies
+    add/           # URL paste → preview → add flow
+  components/      # Shared UI components
+  lib/             # Server-side clients (TMDB, Seerr, Plex, sync)
+  types/           # Shared TypeScript interfaces
+prisma/
+  schema.prisma    # Movie, Rating, Setting models
+  migrations/      # SQLite migrations
+tests/             # Vitest test files
+server.ts          # Custom Next.js server (starts sync job in production)
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
