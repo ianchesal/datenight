@@ -11,7 +11,8 @@ Runs in Docker alongside their *arr stack. Add movies by pasting an IMDB or Crit
 - **Seerr integration** — top 10 unwatched movies are automatically requested for download; status shown per movie (Queued / Downloading / Ready)
 - **Plex integration** — a "Date Night" playlist is kept in sync with available movies in watch order
 - **Blind ratings** — each person gives a thumbs up or down and writes a critic's quote independently (Siskel & Ebert style); results are revealed only after both have rated, with 🤝 if you agreed and ⚔️ if you didn't
-- **Ask Claude** — sidebar link opens Claude with a pre-filled recommendation prompt based on recently watched films
+- **Recommendations** — Claude Opus analyzes your agreed-upon films and recommends 2 consensus picks (films you&apos;ll both likely 👍) and 1 wild card (a deliberate push outside your comfort zone); optional Criterion-only filter
+- **Ask Claude** — sidebar link opens Claude with a pre-filled prompt based on recently watched films
 - **Warm amber theme** — cozy UI, not a media server dashboard
 
 ## Stack
@@ -46,6 +47,7 @@ cp .env.example .env.local
 | `PLEX_TOKEN` | [Plex authentication token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) |
 | `USER1_NAME` | Display name for the first user (default: `User 1`) |
 | `USER2_NAME` | Display name for the second user (default: `User 2`) |
+| `ANTHROPIC_API_KEY` | [Anthropic API key](https://console.anthropic.com/) — required for the Recommendations feature; the rest of the app works without it |
 
 ## Running Locally
 

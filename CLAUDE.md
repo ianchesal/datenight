@@ -44,6 +44,17 @@ docker exec datenight rm /app/data/criterion.csv
 
 Script is at `scripts/import-csv.ts`. Auto-detects common column names (`Title`, `Film`, `Movie`, etc.).
 
+## Recommendations Feature
+
+Powered by Claude Opus 4.6 with adaptive thinking (`thinking: {type: "adaptive"}`). The feature lives at:
+- `src/lib/recommendations.ts` — builds prompt from agreed films, calls Claude, enriches with TMDB
+- `src/app/api/recommendations/route.ts` — POST endpoint, returns `RecommendationsResult`
+- `src/app/recommendations/page.tsx` — UI with Criterion toggle and 3 recommendation cards
+
+Requires `ANTHROPIC_API_KEY` env var. Returns 503 gracefully if not set — the rest of the app is unaffected.
+
+Claude is given: all 👍👍 agreed films (primary signal), 👎👎 agreed-down films, disagreed films, and the full existing list to avoid. Returns 2 consensus picks + 1 wild card with reasoning.
+
 ## Quick Design Reference
 
 | Decision | Choice |

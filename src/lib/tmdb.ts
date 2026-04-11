@@ -37,10 +37,12 @@ export async function findByImdbId(
 }
 
 export async function searchByTitle(
-  title: string
+  title: string,
+  year?: number
 ): Promise<TmdbMovieDetails | null> {
+  const yearParam = year ? `&year=${year}` : ''
   const res = await fetch(
-    `${BASE}/search/movie?api_key=${apiKey()}&query=${encodeURIComponent(title)}`
+    `${BASE}/search/movie?api_key=${apiKey()}&query=${encodeURIComponent(title)}${yearParam}`
   )
   if (!res.ok) return null
   const data = await res.json()
