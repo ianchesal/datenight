@@ -15,7 +15,8 @@ fi
 
 cd "$SCRIPT_DIR"
 
-read -r -d '' PROMPT <<'EOF'
+PROMPT=$(
+  cat <<'EOF'
 I'm resuming the Date Night project — a home-lab movie watchlist app for Ian and Krista.
 
 Design and planning are complete. Implementation has not started. Please:
@@ -25,9 +26,10 @@ Design and planning are complete. Implementation has not started. Please:
 
 The design spec is at docs/superpowers/specs/2026-04-10-datenight-design.md if you need context on decisions. UI mockups are in docs/mockups/.
 EOF
+)
 
 echo "▶ Starting Claude Code for Date Night..."
 echo "  Project: $SCRIPT_DIR"
 echo ""
 
-claude --permission-mode bypassPermissions -- "$PROMPT"
+claude --permission-mode bypassPermissions "$PROMPT"
