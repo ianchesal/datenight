@@ -31,11 +31,7 @@ Runs in Docker alongside their *arr stack. Add movies by pasting an IMDB or Crit
 
 ## Configuration
 
-All secrets are passed as environment variables. Copy `.env.example` to `.env.local` for local development:
-
-```bash
-cp .env.example .env.local
-```
+All secrets are passed as environment variables. `make setup` creates `.env.local` from `.env.example` automatically. Edit it to fill in your API keys before starting the app.
 
 | Variable | Description |
 |---|---|
@@ -52,66 +48,56 @@ cp .env.example .env.local
 ## Running Locally
 
 ```bash
-# Install dependencies
-npm install
-
-# Set up the database
-npx prisma migrate dev
-
-# Start the dev server
-npm run dev
+make setup   # first time: installs deps, creates .env.local, migrates DB
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Edit `.env.local` with your API keys, then:
+
+```bash
+make dev     # http://localhost:3000
+```
 
 ## Running in Docker
 
 ```bash
-# Build the image
-docker build -t datenight .
-
-# Or use docker compose (edit the volume path in docker-compose.yml first)
-docker compose up -d
+make docker-build   # build the image
+make docker-up      # start via docker compose (detached)
+make docker-logs    # tail logs
+make docker-down    # stop
 ```
 
 The container runs `prisma migrate deploy` on startup before serving traffic.
 
 ## Bulk Import from a Spreadsheet
 
-If you have an existing list of films in a Google Sheet (or any spreadsheet), you can bulk-import them via CSV.
-
-### Local development
+If you have an existing list of films in a Google Sheet (or any spreadsheet), export it as CSV (File → Download → CSV) then:
 
 ```bash
-# Export your sheet: File → Download → Comma Separated Values (.csv)
-npm run import ~/Downloads/criterion.csv
+# Local dev
+make import file=~/Downloads/criterion.csv
 
-# If the title column isn't auto-detected, specify it
-npm run import ~/Downloads/criterion.csv "Film Title"
+# Production (Docker)
+make docker-import file=~/Downloads/criterion.csv
 ```
 
-### Production (Docker)
+If the title column isn't auto-detected, pass its name as a second argument to the underlying script: `npm run import -- ~/Downloads/criterion.csv "Film Title"`.
 
-```bash
-# 1. Get the CSV onto your homelab host, then copy it into the container
-docker cp /path/to/criterion.csv datenight:/app/data/criterion.csv
-
-# 2. Run the import inside the container
-docker exec datenight node_modules/.bin/tsx scripts/import-csv.ts /app/data/criterion.csv
-
-# 3. Clean up
-docker exec datenight rm /app/data/criterion.csv
-```
+Auto-detected column names: `Title`, `Film`, `Movie`, `Name`, `Film Title`, `Movie Title`.
 
 The script looks up each film on TMDB by title, skips anything already in the list, and prints a summary of what imported, what was skipped, and anything it couldn't find (so you can add those manually via the UI).
 
-Auto-detected column names: `Title`, `Film`, `Movie`, `Name`, `Film Title`, `Movie Title`. Any other name — pass it as the second argument.
-
-## Tests
+## Tests & Checks
 
 ```bash
-npm run test:run   # run all tests once
-npm test           # watch mode
+make test-run   # run all tests once
+make test       # watch mode
+make check      # tests + lint + typecheck together
+```
+
+## All Make Targets
+
+```bash
+make help       # full list of available commands
 ```
 
 ## Project Structure
@@ -139,7 +125,7 @@ server.ts             # Custom Next.js server (starts sync job in production)
 ## Troubleshooting
 
 **Movies show "Not Requested" and never download**
-Seerr integration is failing silently. Check that `SEERR_URL` and `SEERR_API_KEY` are correct and that the container can reach Seerr. The sync job runs every 5 minutes — check container logs: `docker logs datenight`.
+Seerr integration is failing silently. Check that `SEERR_URL` and `SEERR_API_KEY` are correct and that the container can reach Seerr. The sync job runs every 5 minutes — check logs: `make docker-logs`.
 
 **Plex playlist isn't updating**
 Check `PLEX_URL` and `PLEX_TOKEN`. The Plex token expires occasionally; get a fresh one from Settings → Troubleshooting → Get Token in the Plex UI. The playlist syncs as part of the same 5-minute cron job as Seerr.
@@ -148,23 +134,20 @@ Check `PLEX_URL` and `PLEX_TOKEN`. The Plex token expires occasionally; get a fr
 The `TMDB_API_KEY` is likely missing or wrong. Test it: `curl "https://api.themoviedb.org/3/movie/550?api_key=YOUR_KEY"` — should return JSON, not an auth error.
 
 **The app starts but the database is empty after a restart**
-The data volume isn't persisted. Check your `docker-compose.yml` volume config. With the named volume (`datenight-data`), data survives container restarts automatically. If you switched from a bind mount, the old data is still at the bind mount path.
+The data volume isn't persisted. With the named volume (`datenight-data`) in `docker-compose.yml`, data survives restarts automatically. If you switched from a bind mount, the old data is still at the bind mount path.
 
 **Inspecting or editing the database directly**
 ```bash
-# Local dev — opens a browser GUI at localhost:5555
-npx prisma studio
-
-# Production — open a shell in the container
-docker exec -it datenight sh
-# The database file is at /app/data/datenight.db
+make db-studio        # local dev — browser GUI at localhost:5555
+make docker-shell     # production — shell inside the running container
+                      # database is at /app/data/datenight.db
 ```
 
 **Recommendations page shows an error or returns nothing useful**
-Make sure `ANTHROPIC_API_KEY` is set and valid. The feature requires at least a few watched and rated films to work well — the more films you've both rated, the better the recommendations. If you have no agreed films yet, it will still work but with less context.
+Make sure `ANTHROPIC_API_KEY` is set and valid. The feature works best after you've rated a few films together — the more you've agreed on, the sharper the recommendations.
 
 **Container won't start / exits immediately**
-Check logs: `docker logs datenight`. The most common cause is a missing environment variable or a database migration failure on first boot.
+Run `make docker-logs`. The most common cause is a missing environment variable or a database migration failure on first boot.
 
 ## License
 
