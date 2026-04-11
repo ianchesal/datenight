@@ -8,11 +8,6 @@ A home-lab web app for Ian and Krista to manage their Criterion Collection date 
 
 Post-plan additions: configurable user names, thumbs up/down rating system, delete button on movie rows, loading skeletons, bulk CSV import, Claude-powered recommendations, GitHub Actions CI.
 
-## Key Documents
-
-- **Design spec:** `docs/superpowers/specs/2026-04-10-datenight-design.md`
-- **Implementation plan:** `docs/superpowers/plans/2026-04-10-datenight.md`
-- **UI mockups:** `docs/mockups/` (open in any browser)
 
 ## Tech Stack
 
