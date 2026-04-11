@@ -15,7 +15,7 @@ fi
 
 cd "$SCRIPT_DIR"
 
-read -r -d '' PROMPT << 'EOF'
+read -r -d '' PROMPT <<'EOF'
 I'm resuming the Date Night project — a home-lab movie watchlist app for Ian and Krista.
 
 Design and planning are complete. Implementation has not started. Please:
@@ -30,4 +30,4 @@ echo "▶ Starting Claude Code for Date Night..."
 echo "  Project: $SCRIPT_DIR"
 echo ""
 
-claude "$PROMPT"
+claude --permission-mode bypassPermissions -- "$PROMPT"
