@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "tsx server.ts",
-    "lint": "next lint",
+    "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest",
     "test:run": "vitest run",
     "import": "tsx scripts/import-csv.ts"
