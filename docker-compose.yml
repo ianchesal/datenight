@@ -1,0 +1,17 @@
+# docker-compose.yml
+services:
+  datenight:
+    build: .
+    image: datenight:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - /path/to/your/data:/app/data
+    environment:
+      - DATABASE_URL=file:/app/data/datenight.db
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - SEERR_URL=${SEERR_URL}
+      - SEERR_API_KEY=${SEERR_API_KEY}
+      - PLEX_URL=${PLEX_URL}
+      - PLEX_TOKEN=${PLEX_TOKEN}
+    restart: unless-stopped
