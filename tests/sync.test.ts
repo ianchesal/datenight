@@ -65,7 +65,7 @@ describe('runSync', () => {
     expect(seerr.getMovieStatus).toHaveBeenCalledWith(345911)
     expect(prisma.movie.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { seerrStatus: 'processing', seerrMediaId: 42 },
+      data: { seerrStatus: 'processing', seerrMediaId: '42' },
     })
   })
 

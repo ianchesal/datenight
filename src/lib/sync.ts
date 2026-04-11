@@ -31,7 +31,7 @@ export async function runSync(): Promise<void> {
         where: { id: movie.id },
         data: {
           seerrStatus: status,
-          ...(seerrMediaId !== undefined ? { seerrMediaId: seerrMediaId as unknown as string } : {}),
+          ...(seerrMediaId !== undefined ? { seerrMediaId: String(seerrMediaId) } : {}),
         },
       })
     }
