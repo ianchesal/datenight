@@ -2,6 +2,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -59,12 +60,23 @@ export function Sidebar() {
 }
 
 function AskClaudeLink() {
-  const prompt = encodeURIComponent(
-    'We have a Criterion Collection movie watchlist. Can you recommend films we might enjoy? Please suggest titles available on the Criterion Collection website.'
-  )
+  const [href, setHref] = useState('https://claude.ai/')
+
+  useEffect(() => {
+    fetch('/api/watched-titles')
+      .then((r) => r.json())
+      .then((titles: Array<{ title: string; year: number }>) => {
+        if (titles.length === 0) return
+        const list = titles.map((t) => `- ${t.title} (${t.year})`).join('\n')
+        const prompt = `We love Criterion Collection films. Here are the last ${titles.length} films we watched:\n${list}\n\nBased on these, can you recommend other Criterion Collection films we might enjoy?`
+        setHref(`https://claude.ai/new?q=${encodeURIComponent(prompt)}`)
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <a
-      href={`https://claude.ai/new?q=${prompt}`}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
