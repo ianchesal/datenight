@@ -1,8 +1,12 @@
 /**
  * Import movies from a CSV export of a Google Sheet.
  *
- * Usage:
+ * Local dev usage:
  *   npx tsx scripts/import-csv.ts <path-to-csv> [title-column]
+ *
+ * Production (Docker) usage:
+ *   docker cp criterion.csv datenight:/app/data/criterion.csv
+ *   docker exec datenight node_modules/.bin/tsx scripts/import-csv.ts /app/data/criterion.csv
  *
  * Examples:
  *   npx tsx scripts/import-csv.ts ~/Downloads/criterion-list.csv
