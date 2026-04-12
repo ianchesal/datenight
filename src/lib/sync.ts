@@ -22,17 +22,16 @@ async function isRequestingAllowed(): Promise<boolean> {
 }
 
 export async function runSync(): Promise<void> {
-  const watchlist = await prisma.movie.findMany({
-    where: { status: 'watchlist' },
-    orderBy: { sortOrder: 'asc' },
-    take: TOP_N,
-  })
-
   const canRequest = await isRequestingAllowed()
 
-  for (const movie of watchlist) {
-    if (!movie.seerrRequestId) {
-      if (!canRequest) continue
+  // Auto-request the top N unwatched movies that haven't been requested yet
+  if (canRequest) {
+    const toRequest = await prisma.movie.findMany({
+      where: { status: 'watchlist', seerrRequestId: null },
+      orderBy: { sortOrder: 'asc' },
+      take: TOP_N,
+    })
+    for (const movie of toRequest) {
       const result = await requestMovie(movie.tmdbId)
       if (result) {
         await prisma.movie.update({
@@ -44,16 +43,23 @@ export async function runSync(): Promise<void> {
           },
         })
       }
-    } else {
-      const { status, seerrMediaId } = await getMovieStatus(movie.tmdbId)
-      await prisma.movie.update({
-        where: { id: movie.id },
-        data: {
-          seerrStatus: status,
-          ...(seerrMediaId !== undefined ? { seerrMediaId: String(seerrMediaId) } : {}),
-        },
-      })
     }
+  }
+
+  // Update status for ALL watchlist movies that have been requested — no top-N
+  // limit here so movies outside the top 10 still get their status refreshed.
+  const requested = await prisma.movie.findMany({
+    where: { status: 'watchlist', seerrRequestId: { not: null } },
+  })
+  for (const movie of requested) {
+    const { status, seerrMediaId } = await getMovieStatus(movie.tmdbId)
+    await prisma.movie.update({
+      where: { id: movie.id },
+      data: {
+        seerrStatus: status,
+        ...(seerrMediaId !== undefined ? { seerrMediaId: String(seerrMediaId) } : {}),
+      },
+    })
   }
 
   const available = await prisma.movie.findMany({
