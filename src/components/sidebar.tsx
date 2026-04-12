@@ -62,9 +62,42 @@ export function Sidebar() {
         >
           🎬 Browse IMDB
         </a>
+        <PlexSyncButton />
         <AskClaudeLink />
       </div>
     </aside>
+  )
+}
+
+function PlexSyncButton() {
+  const [state, setState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+
+  async function handleClick() {
+    setState('loading')
+    try {
+      const res = await fetch('/api/plex-sync', { method: 'POST' })
+      setState(res.ok ? 'ok' : 'error')
+    } catch {
+      setState('error')
+    } finally {
+      setTimeout(() => setState('idle'), 3000)
+    }
+  }
+
+  const label =
+    state === 'loading' ? '⏳ Syncing…'
+    : state === 'ok'    ? '✅ Synced!'
+    : state === 'error' ? '❌ Failed'
+    :                     '🎭 Sync Plex'
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={state === 'loading'}
+      className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-100 rounded-lg transition-colors w-full text-left disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      {label}
+    </button>
   )
 }
 

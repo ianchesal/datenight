@@ -1,7 +1,7 @@
 // src/lib/sync.ts
 import { prisma } from './db'
 import { getMovieStatus, requestMovie } from './seerr'
-import { syncDateNightPlaylist } from './plex'
+import { syncDateNightCollection } from './plex'
 
 const TOP_N = 10
 
@@ -61,7 +61,7 @@ export async function runSync(): Promise<void> {
     orderBy: { sortOrder: 'asc' },
   })
 
-  await syncDateNightPlaylist(available.map((m) => ({ imdbId: m.imdbId })))
+  await syncDateNightCollection(available.map((m) => ({ title: m.title, year: m.year })))
 }
 
 export function startSyncJob(): void {
