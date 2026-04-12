@@ -80,8 +80,11 @@ export default function WatchlistPage() {
     fetchMovies()
   }
 
-  const handleRemove = async (movieId: number) => {
+  const handleRemove = async (movieId: number, opts: { seerr: boolean }) => {
     setMovies((prev) => prev.filter((m) => m.id !== movieId))
+    if (opts.seerr) {
+      await fetch(`/api/movies/${movieId}/seerr`, { method: 'DELETE' })
+    }
     await fetch(`/api/movies/${movieId}`, { method: 'DELETE' })
   }
 
