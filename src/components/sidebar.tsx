@@ -54,6 +54,14 @@ export function Sidebar() {
         >
           🎞️ Browse Criterion
         </a>
+        <a
+          href="https://www.imdb.com/search/title/?title_type=feature"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
+        >
+          🎬 Browse IMDB
+        </a>
         <AskClaudeLink />
       </div>
     </aside>
