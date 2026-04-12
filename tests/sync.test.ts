@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/db', () => ({
   prisma: {
-    movie: { findMany: vi.fn(), update: vi.fn() },
+    movie: { findMany: vi.fn(), update: vi.fn(), count: vi.fn() },
   },
 }))
 vi.mock('@/lib/seerr', () => ({
@@ -11,7 +11,7 @@ vi.mock('@/lib/seerr', () => ({
   requestMovie: vi.fn(),
 }))
 vi.mock('@/lib/plex', () => ({
-  syncDateNightPlaylist: vi.fn(),
+  syncDateNightCollection: vi.fn(),
 }))
 
 import { prisma } from '@/lib/db'
@@ -21,6 +21,8 @@ import { runSync } from '@/lib/sync'
 
 const baseMovie = {
   id: 1,
+  title: 'Seven Samurai',
+  year: 1954,
   tmdbId: 345911,
   imdbId: 'tt0047478',
   seerrRequestId: null,
@@ -30,14 +32,17 @@ const baseMovie = {
 }
 
 describe('runSync', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(prisma.movie.count).mockResolvedValue(0)
+  })
 
   it('requests top-10 movies not yet in Seerr', async () => {
     vi.mocked(prisma.movie.findMany)
       .mockResolvedValueOnce([baseMovie] as any)
       .mockResolvedValueOnce([])
     vi.mocked(seerr.requestMovie).mockResolvedValue({ requestId: '99' })
-    vi.mocked(plex.syncDateNightPlaylist).mockResolvedValue()
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
 
     await runSync()
 
@@ -57,7 +62,7 @@ describe('runSync', () => {
       status: 'processing',
       seerrMediaId: 42,
     })
-    vi.mocked(plex.syncDateNightPlaylist).mockResolvedValue()
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
 
     await runSync()
 
@@ -69,16 +74,58 @@ describe('runSync', () => {
     })
   })
 
-  it('syncs Plex playlist with available movies in sort order', async () => {
+  it('skips requestMovie when SEERR_CONCURRENCY is 0', async () => {
+    vi.stubEnv('SEERR_CONCURRENCY', '0')
     vi.mocked(prisma.movie.findMany)
+      .mockResolvedValueOnce([baseMovie] as any)
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ ...baseMovie, seerrStatus: 'available' }] as any)
-    vi.mocked(plex.syncDateNightPlaylist).mockResolvedValue()
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
 
     await runSync()
 
-    expect(plex.syncDateNightPlaylist).toHaveBeenCalledWith([
-      { imdbId: 'tt0047478' },
+    expect(seerr.requestMovie).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
+  })
+
+  it('skips requestMovie when active downloads are at the concurrency limit', async () => {
+    vi.stubEnv('SEERR_CONCURRENCY', '2')
+    vi.mocked(prisma.movie.count).mockResolvedValue(2)
+    vi.mocked(prisma.movie.findMany)
+      .mockResolvedValueOnce([baseMovie] as any)
+      .mockResolvedValueOnce([])
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
+
+    await runSync()
+
+    expect(seerr.requestMovie).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
+  })
+
+  it('allows requestMovie when active downloads are under the concurrency limit', async () => {
+    vi.stubEnv('SEERR_CONCURRENCY', '2')
+    vi.mocked(prisma.movie.count).mockResolvedValue(1)
+    vi.mocked(prisma.movie.findMany)
+      .mockResolvedValueOnce([baseMovie] as any)
+      .mockResolvedValueOnce([])
+    vi.mocked(seerr.requestMovie).mockResolvedValue({ requestId: '99' })
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
+
+    await runSync()
+
+    expect(seerr.requestMovie).toHaveBeenCalledWith(345911)
+    vi.unstubAllEnvs()
+  })
+
+  it('syncs Plex collection with available movies in sort order', async () => {
+    vi.mocked(prisma.movie.findMany)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ ...baseMovie, seerrStatus: 'available' }] as any)
+    vi.mocked(plex.syncDateNightCollection).mockResolvedValue()
+
+    await runSync()
+
+    expect(plex.syncDateNightCollection).toHaveBeenCalledWith([
+      { title: baseMovie.title, year: baseMovie.year },
     ])
   })
 })
