@@ -104,7 +104,8 @@ describe('PATCH /api/ratings', () => {
   })
 
   it('returns 404 when no prior rating exists', async () => {
-    vi.mocked(prisma.rating.update).mockRejectedValue(new Error('Record not found'))
+    const p2025 = Object.assign(new Error('Record not found'), { code: 'P2025' })
+    vi.mocked(prisma.rating.update).mockRejectedValue(p2025)
 
     const req = new Request('http://localhost/api/ratings', {
       method: 'PATCH',

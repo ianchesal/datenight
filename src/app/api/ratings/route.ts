@@ -46,8 +46,15 @@ export async function PATCH(req: Request) {
       where: { movieId_user: { movieId, user } },
       data: { rating, quote: quote.trim() },
     })
-  } catch {
-    return NextResponse.json({ error: 'rating not found' }, { status: 404 })
+  } catch (err) {
+    const isNotFound =
+      err instanceof Error &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2025'
+    if (isNotFound) {
+      return NextResponse.json({ error: 'rating not found' }, { status: 404 })
+    }
+    throw err
   }
 
   const ratings = await prisma.rating.findMany({ where: { movieId } })
