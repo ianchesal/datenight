@@ -29,8 +29,8 @@ export interface Movie {
   seerrRequestId?: string | null
   seerrMediaId?: string | null
   seerrStatus: SeerrStatus
-  watchedAt?: string | null
-  createdAt: string
+  watchedAt?: Date | string | null
+  createdAt: Date | string
   ratings?: Rating[]
 }
 
@@ -40,7 +40,7 @@ export interface Rating {
   user: User
   rating: RatingValue
   quote: string
-  submittedAt: string
+  submittedAt: Date | string
 }
 
 export interface TmdbMovieDetails {
