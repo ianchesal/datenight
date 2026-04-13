@@ -182,9 +182,15 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          {(['user1', 'user2'] as User[]).map((user) => renderRatingRow(user))}
-        </div>
+        {localRatings.length === 0 ? (
+          <p className="text-xs text-stone-400 italic text-center py-2">
+            Waiting for both ratings…
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {(['user1', 'user2'] as User[]).map((user) => renderRatingRow(user))}
+          </div>
+        )}
 
         {/* Cleanup button — only shown when movie has a Seerr entry */}
         {movie.seerrMediaId && (
