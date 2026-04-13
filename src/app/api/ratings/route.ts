@@ -3,16 +3,17 @@ import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { USER_KEYS } from '@/lib/users'
+import type { User, RatingValue } from '@/types'
 
 interface RatingBody {
   movieId: number
-  user: string
-  rating: string
+  user: User
+  rating: RatingValue
   quote: string
 }
 
 function validateRatingBody(body: Partial<RatingBody>): NextResponse | null {
-  if (!USER_KEYS.includes(body.user as any)) {
+  if (!USER_KEYS.includes(body.user as User)) {
     return NextResponse.json({ error: 'invalid user' }, { status: 422 })
   }
   if (!['up', 'down'].includes(body.rating ?? '')) {
