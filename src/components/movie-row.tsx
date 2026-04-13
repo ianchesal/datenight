@@ -1,8 +1,8 @@
 // src/components/movie-row.tsx
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import { StatusBadge } from "./status-badge";
+import { MoviePoster } from "./movie-poster";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,21 +49,7 @@ export function MovieRow({
         </span>
 
         {/* Poster */}
-        <div className="w-9 h-14 bg-amber-100 rounded flex-shrink-0 overflow-hidden">
-          {movie.posterUrl ? (
-            <Image
-              src={movie.posterUrl}
-              alt={movie.title}
-              width={36}
-              height={56}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-amber-400 text-xs">
-              🎥
-            </div>
-          )}
-        </div>
+        <MoviePoster posterUrl={movie.posterUrl} title={movie.title} size="sm" />
 
         {/* Info */}
         <div className="flex-1 min-w-0">
