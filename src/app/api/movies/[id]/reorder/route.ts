@@ -23,7 +23,7 @@ export async function PATCH(
   movies.splice(newIndex, 0, moved)
 
   // Persist new sort orders
-  await Promise.all(
+  await prisma.$transaction(
     movies.map((m, i) =>
       prisma.movie.update({ where: { id: m.id }, data: { sortOrder: i + 1 } })
     )
