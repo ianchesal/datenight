@@ -44,13 +44,26 @@ export default function WatchlistPage() {
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchMovies()
-    fetch('/api/user-names')
-      .then((r) => r.json())
-      .then(setUserNames)
-      .catch(() => {})
-  }, [fetchMovies])
+    const controller = new AbortController()
+
+    const load = async () => {
+      try {
+        const [moviesData, namesData] = await Promise.all([
+          fetch('/api/movies', { signal: controller.signal }).then((r) => r.json()),
+          fetch('/api/user-names', { signal: controller.signal }).then((r) => r.json()),
+        ])
+        setMovies(sortByStatus(moviesData))
+        setUserNames(namesData)
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== 'AbortError') throw err
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+    return () => controller.abort()
+  }, [])
 
   const lowerSearch = search.toLowerCase()
   const filteredMovies = movies.filter(
