@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Movie } from "@/types";
+import { formatRuntime } from "@/lib/utils";
 
 interface MovieRowProps {
   movie: Movie;
@@ -71,8 +72,7 @@ export function MovieRow({
           </div>
           <div className="text-stone-400 text-xs flex items-center gap-1.5">
             <span>
-              {movie.year} · {Math.floor(movie.runtime / 60)}h{" "}
-              {movie.runtime % 60}m
+              {movie.year} · {formatRuntime(movie.runtime)}
             </span>
             {process.env.NEXT_PUBLIC_SEERR_URL && (
               <a

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import type { RecommendationsResult, Recommendation } from '@/lib/recommendations'
+import { formatRuntime } from '@/lib/utils'
 
 const LOADING_MESSAGES = [
   'Analyzing your taste patterns…',
@@ -228,7 +229,7 @@ function RecommendationCard({
               </h3>
               <p className="text-stone-400 text-xs">
                 {rec.year} · {rec.director}
-                {rec.tmdb?.runtime ? ` · ${Math.floor(rec.tmdb.runtime / 60)}h ${rec.tmdb.runtime % 60}m` : ''}
+                {rec.tmdb?.runtime ? ` · ${formatRuntime(rec.tmdb.runtime)}` : ''}
               </p>
             </div>
             <span
