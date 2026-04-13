@@ -21,9 +21,13 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
   const [editRating, setEditRating] = useState<RatingValue | undefined>(undefined)
   const [editQuote, setEditQuote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const bothRated = localRatings.length === 2
-  const agreed = bothRated && localRatings[0].rating === localRatings[1].rating
+  const agreed =
+    bothRated &&
+    localRatings.find((r) => r.user === 'user1')?.rating ===
+    localRatings.find((r) => r.user === 'user2')?.rating
 
   const openEdit = (user: User) => {
     const existing = localRatings.find((r) => r.user === user)
@@ -36,11 +40,13 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
     setEditingUser(null)
     setEditRating(undefined)
     setEditQuote('')
+    setSaveError(null)
   }
 
   const saveEdit = async () => {
     if (!editingUser || !editRating || !editQuote.trim()) return
     setSaving(true)
+    setSaveError(null)
     try {
       const res = await fetch('/api/ratings', {
         method: 'PATCH',
@@ -56,7 +62,11 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
         const data = await res.json()
         setLocalRatings(data.ratings)
         cancelEdit()
+      } else {
+        setSaveError('Save failed — please try again.')
       }
+    } catch {
+      setSaveError('Save failed — please try again.')
     } finally {
       setSaving(false)
     }
@@ -89,6 +99,7 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
             className="border-amber-300 focus:ring-amber-400 resize-none text-xs"
             rows={2}
           />
+          {saveError && <p className="text-xs text-red-600">{saveError}</p>}
           <div className="flex gap-1">
             <Button
               size="sm"
