@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { ThumbRating } from './thumb-rating'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import type { Movie, Rating, User, RatingValue } from '@/types'
 
 type CleanupState = 'idle' | 'loading' | 'done' | 'error'
@@ -14,9 +16,61 @@ interface MovieCardProps {
 
 export function MovieCard({ movie, userNames }: MovieCardProps) {
   const [cleanupState, setCleanupState] = useState<CleanupState>('idle')
-  const ratings = movie.ratings ?? []
-  const bothRated = ratings.length === 2
-  const agreed = bothRated && ratings[0].rating === ratings[1].rating
+  const [localRatings, setLocalRatings] = useState<Rating[]>(movie.ratings ?? [])
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editRating, setEditRating] = useState<RatingValue | undefined>(undefined)
+  const [editQuote, setEditQuote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const bothRated = localRatings.length === 2
+  const agreed =
+    bothRated &&
+    localRatings.find((r) => r.user === 'user1')?.rating ===
+    localRatings.find((r) => r.user === 'user2')?.rating
+
+  const openEdit = (user: User) => {
+    const existing = localRatings.find((r) => r.user === user)
+    setEditingUser(user)
+    setEditRating(existing?.rating as RatingValue | undefined)
+    setEditQuote(existing?.quote ?? '')
+  }
+
+  const cancelEdit = () => {
+    setEditingUser(null)
+    setEditRating(undefined)
+    setEditQuote('')
+    setSaveError(null)
+  }
+
+  const saveEdit = async () => {
+    if (!editingUser || !editRating || !editQuote.trim()) return
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const res = await fetch('/api/ratings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movieId: movie.id,
+          user: editingUser,
+          rating: editRating,
+          quote: editQuote.trim(),
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setLocalRatings(data.ratings)
+        cancelEdit()
+      } else {
+        setSaveError('Save failed — please try again.')
+      }
+    } catch {
+      setSaveError('Save failed — please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleCleanup = async () => {
     if (cleanupState === 'loading') return
@@ -28,6 +82,79 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
     } catch {
       setCleanupState('error')
     }
+  }
+
+  const renderRatingRow = (user: User) => {
+    const r = localRatings.find((rated) => rated.user === user)
+    const hasRated = !!r
+
+    if (editingUser === user) {
+      return (
+        <div key={user} className="bg-amber-50 rounded-lg p-2 space-y-2">
+          <span className="text-xs font-semibold text-amber-900">{userNames[user]}</span>
+          <ThumbRating value={editRating} onChange={setEditRating} size="sm" />
+          <Textarea
+            value={editQuote}
+            onChange={(e) => setEditQuote(e.target.value)}
+            className="border-amber-300 focus:ring-amber-400 resize-none text-xs"
+            rows={2}
+          />
+          {saveError && <p className="text-xs text-red-600">{saveError}</p>}
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="flex-1 h-6 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={saveEdit}
+              disabled={saving || !editRating || !editQuote.trim()}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 h-6 text-xs border-stone-200 text-stone-500"
+              onClick={cancelEdit}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    if (!hasRated) {
+      return (
+        <div key={user} className="bg-stone-50 rounded-lg p-2 flex items-center justify-between">
+          <span className="text-xs font-semibold text-stone-400">{userNames[user]}</span>
+          <span className="text-xs text-stone-300">—</span>
+        </div>
+      )
+    }
+
+    return (
+      <div key={user} className="bg-amber-50 rounded-lg p-2">
+        <div className="flex justify-between items-center mb-0.5">
+          <span className="text-xs font-semibold text-amber-900">{userNames[user]}</span>
+          <div className="flex items-center gap-1.5">
+            {bothRated ? (
+              <ThumbRating value={r.rating as RatingValue} readonly size="sm" />
+            ) : (
+              <span className="text-xs text-green-600">✓</span>
+            )}
+            <button
+              onClick={() => openEdit(user)}
+              className="text-xs text-amber-500 hover:text-amber-700 transition-colors"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+        {bothRated && (
+          <p className="text-xs text-stone-500 italic line-clamp-2">&ldquo;{r.quote}&rdquo;</p>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -66,22 +193,14 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
           )}
         </div>
 
-        {bothRated ? (
-          <div className="space-y-2">
-            {ratings.map((r: Rating) => (
-              <div key={r.user} className="bg-amber-50 rounded-lg p-2">
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-xs font-semibold text-amber-900">{userNames[r.user as User]}</span>
-                  <ThumbRating value={r.rating as RatingValue} readonly size="sm" />
-                </div>
-                <p className="text-xs text-stone-500 italic line-clamp-2">&ldquo;{r.quote}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-        ) : (
+        {localRatings.length === 0 ? (
           <p className="text-xs text-stone-400 italic text-center py-2">
             Waiting for both ratings…
           </p>
+        ) : (
+          <div className="space-y-2">
+            {(['user1', 'user2'] as User[]).map((user) => renderRatingRow(user))}
+          </div>
         )}
 
         {/* Cleanup button — only shown when movie has a Seerr entry */}

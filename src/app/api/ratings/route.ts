@@ -26,3 +26,37 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ complete, ratings }, { status: 201 })
 }
+
+export async function PATCH(req: Request) {
+  const body = await req.json().catch(() => ({}))
+  const { movieId, user, rating, quote } = body
+
+  if (!USER_KEYS.includes(user)) {
+    return NextResponse.json({ error: 'invalid user' }, { status: 422 })
+  }
+  if (!['up', 'down'].includes(rating)) {
+    return NextResponse.json({ error: 'rating must be "up" or "down"' }, { status: 422 })
+  }
+  if (!quote?.trim()) {
+    return NextResponse.json({ error: 'quote required' }, { status: 422 })
+  }
+
+  try {
+    await prisma.rating.update({
+      where: { movieId_user: { movieId, user } },
+      data: { rating, quote: quote.trim() },
+    })
+  } catch (err) {
+    const isNotFound =
+      err instanceof Error &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2025'
+    if (isNotFound) {
+      return NextResponse.json({ error: 'rating not found' }, { status: 404 })
+    }
+    throw err
+  }
+
+  const ratings = await prisma.rating.findMany({ where: { movieId } })
+  return NextResponse.json({ ratings }, { status: 200 })
+}

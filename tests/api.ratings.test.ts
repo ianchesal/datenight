@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/db', () => ({
   prisma: {
-    rating: { create: vi.fn(), findMany: vi.fn() },
+    rating: { create: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     movie: { findUnique: vi.fn(), update: vi.fn() },
   },
 }))
@@ -11,7 +11,7 @@ vi.mock('@/lib/seerr', () => ({ deleteMedia: vi.fn() }))
 
 import { prisma } from '@/lib/db'
 import * as seerr from '@/lib/seerr'
-import { POST as POST_RATING } from '@/app/api/ratings/route'
+import { POST as POST_RATING, PATCH as PATCH_RATING } from '@/app/api/ratings/route'
 import { POST as POST_WATCHED } from '@/app/api/movies/[id]/watched/route'
 
 const movie = {
@@ -74,6 +74,69 @@ describe('POST /api/ratings', () => {
       body: JSON.stringify({ movieId: 1, user: 'user1', rating: 'up', quote: '   ' }),
     })
     expect((await POST_RATING(req)).status).toBe(422)
+  })
+})
+
+describe('PATCH /api/ratings', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('updates an existing rating and returns 200 with ratings array', async () => {
+    vi.mocked(prisma.rating.update).mockResolvedValue({
+      id: 1, movieId: 1, user: 'user1', rating: 'down', quote: 'Changed my mind.', submittedAt: new Date(),
+    } as any)
+    vi.mocked(prisma.rating.findMany).mockResolvedValue([
+      { user: 'user1', rating: 'down', quote: 'Changed my mind.' },
+      { user: 'user2', rating: 'up', quote: 'Still love it.' },
+    ] as any)
+
+    const req = new Request('http://localhost/api/ratings', {
+      method: 'PATCH',
+      body: JSON.stringify({ movieId: 1, user: 'user1', rating: 'down', quote: 'Changed my mind.' }),
+    })
+    const res = await PATCH_RATING(req)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.ratings).toHaveLength(2)
+    expect(prisma.rating.update).toHaveBeenCalledWith({
+      where: { movieId_user: { movieId: 1, user: 'user1' } },
+      data: { rating: 'down', quote: 'Changed my mind.' },
+    })
+  })
+
+  it('returns 404 when no prior rating exists', async () => {
+    const p2025 = Object.assign(new Error('Record not found'), { code: 'P2025' })
+    vi.mocked(prisma.rating.update).mockRejectedValue(p2025)
+
+    const req = new Request('http://localhost/api/ratings', {
+      method: 'PATCH',
+      body: JSON.stringify({ movieId: 99, user: 'user1', rating: 'up', quote: 'Great.' }),
+    })
+    const res = await PATCH_RATING(req)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 422 for invalid user', async () => {
+    const req = new Request('http://localhost/api/ratings', {
+      method: 'PATCH',
+      body: JSON.stringify({ movieId: 1, user: 'user3', rating: 'up', quote: 'Great.' }),
+    })
+    expect((await PATCH_RATING(req)).status).toBe(422)
+  })
+
+  it('returns 422 for invalid rating value', async () => {
+    const req = new Request('http://localhost/api/ratings', {
+      method: 'PATCH',
+      body: JSON.stringify({ movieId: 1, user: 'user1', rating: 'meh', quote: 'Hmm.' }),
+    })
+    expect((await PATCH_RATING(req)).status).toBe(422)
+  })
+
+  it('returns 422 for empty quote', async () => {
+    const req = new Request('http://localhost/api/ratings', {
+      method: 'PATCH',
+      body: JSON.stringify({ movieId: 1, user: 'user1', rating: 'up', quote: '  ' }),
+    })
+    expect((await PATCH_RATING(req)).status).toBe(422)
   })
 })
 
