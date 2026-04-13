@@ -1,8 +1,8 @@
 // src/components/movie-row.tsx
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import { StatusBadge } from "./status-badge";
+import { MoviePoster } from "./movie-poster";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Movie } from "@/types";
+import { formatRuntime } from "@/lib/utils";
 
 interface MovieRowProps {
   movie: Movie;
@@ -48,21 +49,7 @@ export function MovieRow({
         </span>
 
         {/* Poster */}
-        <div className="w-9 h-14 bg-amber-100 rounded flex-shrink-0 overflow-hidden">
-          {movie.posterUrl ? (
-            <Image
-              src={movie.posterUrl}
-              alt={movie.title}
-              width={36}
-              height={56}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-amber-400 text-xs">
-              🎥
-            </div>
-          )}
-        </div>
+        <MoviePoster posterUrl={movie.posterUrl} title={movie.title} size="sm" />
 
         {/* Info */}
         <div className="flex-1 min-w-0">
@@ -71,8 +58,7 @@ export function MovieRow({
           </div>
           <div className="text-stone-400 text-xs flex items-center gap-1.5">
             <span>
-              {movie.year} · {Math.floor(movie.runtime / 60)}h{" "}
-              {movie.runtime % 60}m
+              {movie.year} · {formatRuntime(movie.runtime)}
             </span>
             {process.env.NEXT_PUBLIC_SEERR_URL && (
               <a

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { MoviePreview } from '@/types'
+import { formatRuntime } from '@/lib/utils'
 
 export default function AddMoviePage() {
   const router = useRouter()
@@ -99,7 +100,7 @@ export default function AddMoviePage() {
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-stone-900 text-lg leading-tight">{preview.title}</h2>
               <p className="text-stone-500 text-sm mb-2">
-                {preview.year} · {Math.floor(preview.runtime / 60)}h {preview.runtime % 60}m
+                {preview.year} · {formatRuntime(preview.runtime)}
               </p>
               <p className="text-stone-600 text-sm line-clamp-3">{preview.description}</p>
             </div>

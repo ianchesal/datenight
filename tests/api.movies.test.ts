@@ -11,6 +11,7 @@ vi.mock('@/lib/db', () => ({
       update: vi.fn(),
       aggregate: vi.fn(),
     },
+    $transaction: vi.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }))
 vi.mock('@/lib/seerr', () => ({ requestMovie: vi.fn(), deleteMedia: vi.fn(), deleteFromService: vi.fn() }))

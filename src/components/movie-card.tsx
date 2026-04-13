@@ -1,8 +1,8 @@
 // src/components/movie-card.tsx
 'use client'
 import { useState } from 'react'
-import Image from 'next/image'
 import { ThumbRating } from './thumb-rating'
+import { MoviePoster } from './movie-poster'
 import { EditRatingDialog } from './edit-rating-dialog'
 import type { Movie, Rating, User, RatingValue } from '@/types'
 
@@ -81,13 +81,7 @@ export function MovieCard({ movie, userNames }: MovieCardProps) {
   return (
     <div className="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
       {/* Poster */}
-      <div className="relative w-full aspect-[2/3] bg-amber-100">
-        {movie.posterUrl ? (
-          <Image src={movie.posterUrl} alt={movie.title} fill className="object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-amber-300 text-4xl">🎥</div>
-        )}
-      </div>
+      <MoviePoster posterUrl={movie.posterUrl} title={movie.title} size="lg" />
 
       {/* Info */}
       <div className="p-3">

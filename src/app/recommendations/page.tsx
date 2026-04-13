@@ -1,9 +1,10 @@
 // src/app/recommendations/page.tsx
 'use client'
 import { useState } from 'react'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { MoviePoster } from '@/components/movie-poster'
 import type { RecommendationsResult, Recommendation } from '@/lib/recommendations'
+import { formatRuntime } from '@/lib/utils'
 
 const LOADING_MESSAGES = [
   'Analyzing your taste patterns…',
@@ -203,21 +204,7 @@ function RecommendationCard({
     <div className="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
       <div className="flex gap-4 p-4">
         {/* Poster */}
-        <div className="w-16 h-24 bg-amber-100 rounded-lg flex-shrink-0 overflow-hidden">
-          {rec.tmdb?.posterUrl ? (
-            <Image
-              src={rec.tmdb.posterUrl}
-              alt={rec.title}
-              width={64}
-              height={96}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-amber-300 text-2xl">
-              🎥
-            </div>
-          )}
-        </div>
+        <MoviePoster posterUrl={rec.tmdb?.posterUrl} title={rec.title} size="md" />
 
         {/* Info */}
         <div className="flex-1 min-w-0">
@@ -228,7 +215,7 @@ function RecommendationCard({
               </h3>
               <p className="text-stone-400 text-xs">
                 {rec.year} · {rec.director}
-                {rec.tmdb?.runtime ? ` · ${Math.floor(rec.tmdb.runtime / 60)}h ${rec.tmdb.runtime % 60}m` : ''}
+                {rec.tmdb?.runtime ? ` · ${formatRuntime(rec.tmdb.runtime)}` : ''}
               </p>
             </div>
             <span
