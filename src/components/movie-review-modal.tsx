@@ -101,7 +101,7 @@ export function MovieReviewModal({
               Edit {userNames.user2}&apos;s review
             </button>
           </div>
-          <Button size="sm" onClick={onClose} className="bg-amber-500 hover:bg-amber-600 text-white">
+          <Button data-testid="modal-close-btn" size="sm" onClick={onClose} className="bg-amber-500 hover:bg-amber-600 text-white">
             Close
           </Button>
         </DialogFooter>

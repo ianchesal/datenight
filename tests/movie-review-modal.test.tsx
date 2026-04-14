@@ -140,9 +140,7 @@ describe('MovieReviewModal', () => {
         open={true} onClose={onClose} onEditUser={onEditUser}
       />
     )
-    const closeButtons = screen.getAllByRole('button', { name: /close/i })
-    // Click the visible Close button (the last one), not the icon button
-    fireEvent.click(closeButtons[closeButtons.length - 1])
+    fireEvent.click(screen.getByTestId('modal-close-btn'))
     expect(onClose).toHaveBeenCalled()
   })
 
