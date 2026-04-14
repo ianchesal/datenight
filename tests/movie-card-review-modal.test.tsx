@@ -44,7 +44,7 @@ describe('MovieCard — review modal trigger', () => {
     // The modal shows full quotes without truncation
     const quotes = screen.getAllByText(/An epic masterpiece/)
     expect(quotes.length).toBeGreaterThanOrEqual(2) // At least 2: one from card line-clamp, one from modal
-    expect(screen.getAllByText(/Completely gripping/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/Completely gripping/).length).toBeGreaterThanOrEqual(2)
   })
 
   it('does not open the modal when an Edit button is clicked', () => {
