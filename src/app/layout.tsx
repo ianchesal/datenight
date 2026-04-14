@@ -23,10 +23,13 @@ export default function RootLayout({
       <body className={`${inter.className} flex flex-col h-screen`}>
         <MobileHeader />
         <div className="flex flex-1 overflow-hidden bg-amber-50">
-          <div className="hidden md:flex">
+          <div className="hidden md:flex h-full">
             <Sidebar />
           </div>
-          <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+          <main
+            className="flex-1 overflow-y-auto pb-20 md:pb-0"
+            style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+          >
             {children}
           </main>
         </div>
