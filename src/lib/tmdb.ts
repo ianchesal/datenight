@@ -5,12 +5,8 @@ import { getConfig } from './config'
 const BASE = 'https://api.themoviedb.org/3'
 const IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 
-async function apiKey(): Promise<string> {
-  return (await getConfig()).tmdbApiKey
-}
-
-async function fetchDetails(tmdbId: number): Promise<TmdbMovieDetails | null> {
-  const res = await fetch(`${BASE}/movie/${tmdbId}?api_key=${await apiKey()}`)
+async function fetchDetails(tmdbId: number, key: string): Promise<TmdbMovieDetails | null> {
+  const res = await fetch(`${BASE}/movie/${tmdbId}?api_key=${key}`)
   if (!res.ok) return null
   const m = await res.json()
   return {
@@ -27,34 +23,37 @@ async function fetchDetails(tmdbId: number): Promise<TmdbMovieDetails | null> {
 export async function findByImdbId(
   imdbId: string
 ): Promise<TmdbMovieDetails | null> {
+  const { tmdbApiKey } = await getConfig()
   const res = await fetch(
-    `${BASE}/find/${imdbId}?api_key=${await apiKey()}&external_source=imdb_id`
+    `${BASE}/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id`
   )
   if (!res.ok) return null
   const data = await res.json()
   const hit = data.movie_results?.[0]
   if (!hit) return null
-  return fetchDetails(hit.id)
+  return fetchDetails(hit.id, tmdbApiKey)
 }
 
 export async function searchByTitle(
   title: string,
   year?: number
 ): Promise<TmdbMovieDetails | null> {
+  const { tmdbApiKey } = await getConfig()
   const yearParam = year ? `&year=${year}` : ''
   const res = await fetch(
-    `${BASE}/search/movie?api_key=${await apiKey()}&query=${encodeURIComponent(title)}${yearParam}`
+    `${BASE}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(title)}${yearParam}`
   )
   if (!res.ok) return null
   const data = await res.json()
   const hit = data.results?.[0]
   if (!hit) return null
-  return fetchDetails(hit.id)
+  return fetchDetails(hit.id, tmdbApiKey)
 }
 
 export async function lookupCriterionSlug(
   slug: string
 ): Promise<TmdbMovieDetails | null> {
+  const { tmdbApiKey } = await getConfig()
   try {
     const res = await fetch(`https://www.criterion.com/films/${slug}`)
     if (res.ok) {
