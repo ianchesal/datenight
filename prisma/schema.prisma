@@ -8,24 +8,37 @@ datasource db {
 }
 
 model Movie {
-  id             Int         @id @default(autoincrement())
-  title          String
-  year           Int
-  runtime        Int
-  description    String
-  posterUrl      String
-  imdbId         String      @unique
-  tmdbId         Int         @unique
-  criterionUrl   String?
-  imdbUrl        String?
-  sortOrder      Int
-  status         String      @default("watchlist")
-  seerrRequestId String?
-  seerrMediaId   String?
-  seerrStatus    String      @default("not_requested")
-  watchedAt      DateTime?
-  createdAt      DateTime    @default(now())
-  ratings        Rating[]
+  id                   Int                 @id @default(autoincrement())
+  title                String
+  year                 Int
+  runtime              Int
+  description          String
+  posterUrl            String
+  imdbId               String              @unique
+  tmdbId               Int                 @unique
+  criterionUrl         String?
+  imdbUrl              String?
+  sortOrder            Int
+  status               String              @default("watchlist")
+  seerrRequestId       String?
+  seerrMediaId         String?
+  seerrStatus          String              @default("not_requested")
+  watchedAt            DateTime?
+  createdAt            DateTime            @default(now())
+  streamingLastChecked DateTime?
+  streamingLink        String?
+  ratings              Rating[]
+  streamingProviders   StreamingProvider[]
+}
+
+model StreamingProvider {
+  id           Int     @id @default(autoincrement())
+  movieId      Int
+  providerId   Int
+  providerName String
+  movie        Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, providerId])
 }
 
 model Rating {
