@@ -15,6 +15,7 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 vi.mock('@/lib/seerr', () => ({ requestMovie: vi.fn(), deleteMedia: vi.fn(), deleteFromService: vi.fn() }))
+vi.mock('@/lib/streaming', () => ({ syncMovieProviders: vi.fn().mockResolvedValue(undefined) }))
 
 import { prisma } from '@/lib/db'
 import { GET, POST } from '@/app/api/movies/route'
@@ -30,6 +31,7 @@ const movie = {
   imdbId: 'tt0047478', tmdbId: 345911, criterionUrl: null, imdbUrl: null,
   sortOrder: 1, status: 'watchlist', seerrRequestId: null, seerrMediaId: null,
   seerrStatus: 'not_requested', watchedAt: null,
+  streamingLastChecked: null, streamingLink: null, streamingProviders: [],
   createdAt: new Date(), ratings: [],
 }
 
@@ -66,6 +68,23 @@ describe('POST /api/movies', () => {
     expect(prisma.movie.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ sortOrder: 3 }) })
     )
+  })
+
+  it('triggers streaming provider sync after creating movie', async () => {
+    const { syncMovieProviders } = await import('@/lib/streaming')
+    vi.mocked(prisma.movie.aggregate).mockResolvedValue({ _max: { sortOrder: 2 } } as any)
+    vi.mocked(prisma.movie.create).mockResolvedValue({ ...movie, sortOrder: 3 } as any)
+    const req = new Request('http://localhost/api/movies', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: 'Seven Samurai', year: 1954, runtime: 207,
+        description: 'A poor village...', posterUrl: 'https://img/p.jpg',
+        imdbId: 'tt0047478', tmdbId: 345911,
+      }),
+    })
+    await POST(req)
+    await new Promise((r) => setTimeout(r, 0))
+    expect(syncMovieProviders).toHaveBeenCalledWith(1, 345911)
   })
 })
 

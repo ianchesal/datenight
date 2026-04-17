@@ -10,9 +10,10 @@ const handle = app.getRequestHandler()
 
 app.prepare().then(async () => {
   if (!dev) {
-    // Only start sync job in production (not during next dev)
     const { startSyncJob } = await import('./src/lib/sync')
     startSyncJob()
+    const { startStreamingRefreshJob } = await import('./src/lib/streaming')
+    startStreamingRefreshJob()
   }
 
   createServer((req, res) => {
@@ -21,8 +22,7 @@ app.prepare().then(async () => {
   }).listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`)
   })
+}).catch((err) => {
+  console.error('Failed to start server:', err)
+  process.exit(1)
 })
-  .catch((err) => {
-    console.error('Failed to start server:', err)
-    process.exit(1)
-  })

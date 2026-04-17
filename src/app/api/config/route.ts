@@ -5,8 +5,10 @@ import { getConfig } from '@/lib/config'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const { seerrPublicUrl } = await getConfig()
+  const { seerrPublicUrl, streamingRegion, streamingServices } = await getConfig()
   return NextResponse.json({
     seerrUrl: seerrPublicUrl || null,
+    streamingRegion: streamingRegion || 'US',
+    streamingServices,
   })
 }
