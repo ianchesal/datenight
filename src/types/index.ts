@@ -13,6 +13,13 @@ export type User = 'user1' | 'user2'
 
 export type RatingValue = 'up' | 'down'
 
+export interface StreamingProvider {
+  id: number
+  movieId: number
+  providerId: number
+  providerName: string
+}
+
 export interface Movie {
   id: number
   title: string
@@ -31,7 +38,10 @@ export interface Movie {
   seerrStatus: SeerrStatus
   watchedAt?: Date | string | null
   createdAt: Date | string
+  streamingLastChecked?: Date | string | null
+  streamingLink?: string | null
   ratings?: Rating[]
+  streamingProviders?: StreamingProvider[]
 }
 
 export interface Rating {

@@ -1,12 +1,13 @@
 // src/app/api/movies/route.ts
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { syncMovieProviders } from '@/lib/streaming'
 
 export async function GET() {
   const movies = await prisma.movie.findMany({
     where: { status: 'watchlist' },
     orderBy: { sortOrder: 'asc' },
-    include: { ratings: true },
+    include: { ratings: true, streamingProviders: true },
   })
   return NextResponse.json(movies)
 }
@@ -30,5 +31,10 @@ export async function POST(req: Request) {
       sortOrder: nextOrder,
     },
   })
+
+  syncMovieProviders(movie.id, movie.tmdbId).catch((err) =>
+    console.error('[streaming] Failed to sync providers for new movie:', err)
+  )
+
   return NextResponse.json(movie, { status: 201 })
 }

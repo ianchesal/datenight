@@ -1,10 +1,11 @@
 // src/app/watchlist/page.tsx
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { Play } from 'lucide-react'
 import { MovieRow } from '@/components/movie-row'
 import { RatingDialog } from '@/components/rating-dialog'
 import { FilterBar } from '@/components/filter-bar'
-import type { Movie, User, SeerrStatus } from '@/types'
+import type { Movie, User, StreamingProvider } from '@/types'
 
 // 'deleted' is intentionally omitted — it's a transient Seerr state with no
 // useful filter action for the user on the watchlist.
@@ -14,6 +15,10 @@ const STATUS_BUTTONS = [
   { label: 'Downloading', value: 'processing' },
   { label: 'Ready', value: 'available' },
 ]
+
+function getMatchingProviders(movie: Movie, serviceIds: number[]): StreamingProvider[] {
+  return (movie.streamingProviders ?? []).filter((p) => serviceIds.includes(p.providerId))
+}
 
 const STATUS_ORDER: Record<string, number> = {
   available: 0,
@@ -35,8 +40,10 @@ export default function WatchlistPage() {
   const [ratingTarget, setRatingTarget] = useState<Movie | null>(null)
   const [userNames, setUserNames] = useState<Record<User, string>>({ user1: 'User 1', user2: 'User 2' })
   const [seerrUrl, setSeerrUrl] = useState<string | null>(null)
+  const [streamingServiceIds, setStreamingServiceIds] = useState<number[]>([])
   const [search, setSearch] = useState('')
-  const [activeStatus, setActiveStatus] = useState<SeerrStatus | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string | null>(null)
+  const [streamableOnly, setStreamableOnly] = useState(false)
 
   const fetchMovies = useCallback(async () => {
     const data = await fetch('/api/movies').then((r) => r.json())
@@ -56,6 +63,11 @@ export default function WatchlistPage() {
         setMovies(sortByStatus(moviesData))
         setUserNames(namesData)
         setSeerrUrl(configData.seerrUrl ?? null)
+        try {
+          setStreamingServiceIds(JSON.parse(configData.streamingServices || '[]'))
+        } catch {
+          setStreamingServiceIds([])
+        }
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return
         throw err
@@ -68,12 +80,17 @@ export default function WatchlistPage() {
     return () => controller.abort()
   }, [])
 
+  useEffect(() => {
+    window.addEventListener('streaming-refreshed', fetchMovies)
+    return () => window.removeEventListener('streaming-refreshed', fetchMovies)
+  }, [fetchMovies])
+
   const lowerSearch = search.toLowerCase()
-  const filteredMovies = movies.filter(
-    (m) =>
-      m.title.toLowerCase().includes(lowerSearch) &&
-      (activeStatus === null || m.seerrStatus === activeStatus)
-  )
+  const filteredMovies = movies.filter((m) => {
+    if (!m.title.toLowerCase().includes(lowerSearch)) return false
+    if (streamableOnly && getMatchingProviders(m, streamingServiceIds).length === 0) return false
+    return activeFilter === null || m.seerrStatus === activeFilter
+  })
 
   const handleForceDownload = async (movieId: number) => {
     await fetch(`/api/movies/${movieId}/download`, { method: 'POST' })
@@ -124,30 +141,55 @@ export default function WatchlistPage() {
             search={search}
             onSearchChange={setSearch}
             buttons={STATUS_BUTTONS}
-            activeButton={activeStatus}
-            onButtonChange={(v) => setActiveStatus(v as SeerrStatus | null)}
+            activeButton={activeFilter}
+            onButtonChange={setActiveFilter}
           />
 
+          {streamingServiceIds.length > 0 && (
+            <div className="mb-3">
+              <button
+                onClick={() => setStreamableOnly((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  streamableOnly
+                    ? 'border-green-500 bg-green-500 text-white'
+                    : 'border-amber-200 bg-white text-amber-700 hover:bg-amber-50'
+                }`}
+              >
+                <Play size={10} />
+                Streamable only
+              </button>
+            </div>
+          )}
+
           <div>
-            {filteredMovies.map((movie, index) => (
-              <MovieRow
-                key={movie.id}
-                movie={movie}
-                position={index + 1}
-                seerrUrl={seerrUrl}
-                onMarkWatched={setRatingTarget}
-                onForceDownload={handleForceDownload}
-                onRemove={handleRemove}
-              />
-            ))}
+            {filteredMovies.map((movie, index) => {
+              const matchingProviders = getMatchingProviders(movie, streamingServiceIds)
+              return (
+                <MovieRow
+                  key={movie.id}
+                  movie={movie}
+                  position={index + 1}
+                  seerrUrl={seerrUrl}
+                  streamingProviders={matchingProviders}
+                  streamingLink={movie.streamingLink ?? null}
+                  onMarkWatched={setRatingTarget}
+                  onForceDownload={handleForceDownload}
+                  onRemove={handleRemove}
+                />
+              )
+            })}
           </div>
 
           {filteredMovies.length === 0 && (
             <div className="text-center text-amber-600 mt-16">
               <div className="text-5xl mb-4">🎬</div>
-              <p className="font-medium">{search || activeStatus ? 'No movies match your filter' : 'No movies yet'}</p>
+              <p className="font-medium">{search || activeFilter ? 'No movies match your filter' : 'No movies yet'}</p>
               <p className="text-sm text-amber-500 mt-1">
-                {search || activeStatus ? 'Try clearing the search or filter' : 'Add some from the sidebar'}
+                {streamableOnly
+                  ? 'Configure your streaming services in Settings'
+                  : search || activeFilter
+                  ? 'Try clearing the search or filter'
+                  : 'Add some from the sidebar'}
               </p>
             </div>
           )}
