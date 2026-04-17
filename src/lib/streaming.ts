@@ -95,5 +95,7 @@ export function startStreamingRefreshJob(): void {
       }
     })
     console.log('[streaming] Refresh job started (every 12h)')
+  }).catch((err) => {
+    console.error('[streaming] Failed to start refresh job:', err)
   })
 }
