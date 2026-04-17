@@ -1,6 +1,6 @@
 // src/components/settings-form.tsx
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -116,6 +116,12 @@ const SECTIONS: Section[] = [
   },
 ]
 
+interface StreamingProviderOption {
+  providerId: number
+  providerName: string
+  logoPath: string
+}
+
 interface SettingsFormProps {
   initialValues: Record<string, string>
   redirectTo?: string
@@ -131,6 +137,17 @@ export function SettingsForm({
   const [values, setValues] = useState<Record<string, string>>(initialValues)
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
+  const [providers, setProviders] = useState<StreamingProviderOption[]>([])
+  const [loadingProviders, setLoadingProviders] = useState(false)
+
+  useEffect(() => {
+    setLoadingProviders(true)
+    fetch('/api/streaming-providers')
+      .then((r) => r.json())
+      .then((data) => setProviders(data))
+      .catch(() => {})
+      .finally(() => setLoadingProviders(false))
+  }, [])
 
   function set(key: string, value: string) {
     setValues((v) => ({ ...v, [key]: value }))
@@ -138,6 +155,22 @@ export function SettingsForm({
 
   function toggleReveal(key: string) {
     setRevealed((r) => ({ ...r, [key]: !r[key] }))
+  }
+
+  function getSelectedProviderIds(): number[] {
+    try {
+      return JSON.parse(values['streaming_services'] || '[]')
+    } catch {
+      return []
+    }
+  }
+
+  function toggleProvider(providerId: number) {
+    const current = getSelectedProviderIds()
+    const updated = current.includes(providerId)
+      ? current.filter((id) => id !== providerId)
+      : [...current, providerId]
+    set('streaming_services', JSON.stringify(updated))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -237,6 +270,82 @@ export function SettingsForm({
           </div>
         </div>
       ))}
+
+      {/* Streaming section — custom layout (provider checkboxes don't fit the text-field pattern) */}
+      <div className="bg-white rounded-xl border border-amber-200 mb-5 overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3 bg-amber-50 border-b border-amber-200">
+          <span className="text-base">▶️</span>
+          <span className="font-semibold text-sm text-amber-900">Streaming</span>
+          <span className="ml-auto text-xs text-amber-600">Optional — for streaming availability</span>
+        </div>
+        <div className="px-5 py-5 flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="streaming_region"
+              className="text-xs font-semibold text-amber-900 uppercase tracking-wide"
+            >
+              Region
+            </label>
+            <Input
+              id="streaming_region"
+              type="text"
+              value={values['streaming_region'] ?? 'US'}
+              onChange={(e) => set('streaming_region', e.target.value.toUpperCase())}
+              placeholder="US"
+              className="bg-amber-50 border-amber-200 focus:border-amber-500 w-20"
+            />
+            <p className="text-xs text-amber-600">
+              ISO 3166-1 alpha-2 code (e.g. US, GB, AU). Determines which streaming services are shown.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold text-amber-900 uppercase tracking-wide">
+              Your Streaming Services
+            </span>
+            {loadingProviders ? (
+              <p className="text-xs text-amber-600">Loading providers…</p>
+            ) : providers.length === 0 ? (
+              <p className="text-xs text-amber-600">
+                No providers found. Check your TMDB API key and region above.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {providers.map((p) => {
+                  const selected = getSelectedProviderIds().includes(p.providerId)
+                  return (
+                    <button
+                      key={p.providerId}
+                      type="button"
+                      onClick={() => toggleProvider(p.providerId)}
+                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        selected
+                          ? 'border-amber-500 bg-amber-500 text-white'
+                          : 'border-amber-200 bg-white text-amber-700 hover:bg-amber-50'
+                      }`}
+                    >
+                      <img
+                        src={`/streaming-logos/${p.providerId}.png`}
+                        alt=""
+                        width={16}
+                        height={16}
+                        className="rounded-sm object-contain"
+                        onError={(e) => {
+                          ;(e.target as HTMLImageElement).style.display = 'none'
+                        }}
+                      />
+                      {p.providerName}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <p className="text-xs text-amber-600">
+              Select the services you subscribe to. Movies available on these services will show Watch buttons.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between pt-2 pb-6">
         <p className="text-sm text-amber-600">
