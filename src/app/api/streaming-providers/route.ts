@@ -6,9 +6,12 @@ import { downloadProviderLogo } from '@/lib/streaming'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const regionParam = searchParams.get('region')
   const { streamingRegion } = await getConfig()
-  const region = streamingRegion || 'US'
+  const region = regionParam || streamingRegion || 'US'
+
   const providers = await fetchProviderList(region)
 
   providers.forEach((p) =>

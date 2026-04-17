@@ -145,7 +145,7 @@ export function SettingsForm({
   const region = values['streaming_region'] || 'US'
   const loadingProviders = loadedRegion !== region
   useEffect(() => {
-    fetch('/api/streaming-providers')
+    fetch(`/api/streaming-providers?region=${encodeURIComponent(region)}`)
       .then((r) => r.json())
       .then((data) => { setProviders(data); setLoadedRegion(region) })
       .catch(() => { setProviders([]); setLoadedRegion(region) })

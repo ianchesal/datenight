@@ -51,21 +51,22 @@ export async function syncMovieProviders(movieId: number, tmdbId: number): Promi
     )
   )
 
-  await prisma.streamingProvider.deleteMany({ where: { movieId } })
-  if (data.flatrate.length > 0) {
-    await prisma.streamingProvider.createMany({
-      data: data.flatrate.map((p) => ({
-        movieId,
-        providerId: p.providerId,
-        providerName: p.providerName,
-      })),
-    })
-  }
-
-  await prisma.movie.update({
-    where: { id: movieId },
-    data: { streamingLastChecked: now, streamingLink: data.link },
-  })
+  await prisma.$transaction([
+    prisma.streamingProvider.deleteMany({ where: { movieId } }),
+    ...(data.flatrate.length > 0
+      ? [prisma.streamingProvider.createMany({
+          data: data.flatrate.map((p) => ({
+            movieId,
+            providerId: p.providerId,
+            providerName: p.providerName,
+          })),
+        })]
+      : []),
+    prisma.movie.update({
+      where: { id: movieId },
+      data: { streamingLastChecked: now, streamingLink: data.link },
+    }),
+  ])
 }
 
 export async function refreshStaleProviders(): Promise<void> {
