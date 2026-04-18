@@ -28,6 +28,7 @@ export function MobileBottomNav() {
           )}
         >
           <span
+            aria-hidden="true"
             className={cn(
               'text-xl mb-0.5 px-3 py-0.5 rounded-full',
               pathname === href ? 'bg-amber-600' : ''

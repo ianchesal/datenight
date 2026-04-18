@@ -93,7 +93,7 @@ export function AskClaudeLink() {
       rel="noopener noreferrer"
       className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
     >
-      ✨ Ask Claude
+      <span aria-hidden="true">✨</span> Ask Claude
     </a>
   )
 }

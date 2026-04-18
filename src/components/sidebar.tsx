@@ -20,7 +20,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-5 border-b border-amber-200">
         <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white text-sm">
-          🎬
+          <span aria-hidden="true">🎬</span>
         </div>
         <span className="font-extrabold text-amber-900 text-sm">Date Night</span>
       </div>
@@ -38,7 +38,7 @@ export function Sidebar() {
                 : 'text-amber-800 hover:bg-amber-100'
             )}
           >
-            <span>{icon}</span>
+            <span aria-hidden="true">{icon}</span>
             {label}
           </Link>
         ))}
@@ -56,7 +56,7 @@ export function Sidebar() {
             pathname === '/settings' && 'bg-amber-100 font-semibold'
           )}
         >
-          ⚙️ Settings
+          <span aria-hidden="true">⚙️</span> Settings
         </Link>
       </div>
     </aside>

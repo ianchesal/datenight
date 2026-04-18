@@ -27,4 +27,13 @@ describe('Sidebar', () => {
     expect(screen.queryByText(/browse criterion/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/browse imdb/i)).not.toBeInTheDocument()
   })
+
+  it('wraps nav emoji icons with aria-hidden', () => {
+    render(<Sidebar />)
+    const navLinks = screen.getAllByRole('link')
+    navLinks.forEach((link) => {
+      const iconSpan = link.querySelector('span[aria-hidden="true"]')
+      expect(iconSpan).not.toBeNull()
+    })
+  })
 })

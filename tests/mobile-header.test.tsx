@@ -28,7 +28,7 @@ describe('MobileHeader', () => {
       expect(screen.getByText('Browse Criterion')).toBeInTheDocument()
       expect(screen.getByText('Browse IMDB')).toBeInTheDocument()
       expect(screen.getByText('🎭 Sync Plex')).toBeInTheDocument()
-      expect(screen.getByText('✨ Ask Claude')).toBeInTheDocument()
+      expect(screen.getByText(/ask claude/i)).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument()
     })
   })

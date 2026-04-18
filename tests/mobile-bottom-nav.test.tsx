@@ -49,4 +49,13 @@ describe('MobileBottomNav', () => {
     const labelSpan = spans[spans.length - 1]
     expect(labelSpan).toHaveClass('font-bold')
   })
+
+  it('wraps tab emoji icons with aria-hidden', () => {
+    render(<MobileBottomNav />)
+    const links = screen.getAllByRole('link')
+    links.forEach((link) => {
+      const iconSpan = link.querySelector('span[aria-hidden="true"]')
+      expect(iconSpan).not.toBeNull()
+    })
+  })
 })
