@@ -177,7 +177,7 @@ export default function WatchlistPage() {
                   ? 'Configure your streaming services in Settings'
                   : search || activeFilter
                   ? 'Try clearing the search or filter'
-                  : 'Add some from the sidebar'}
+                  : 'Tap ➕ below to add your first film'}
               </p>
             </div>
           )}
