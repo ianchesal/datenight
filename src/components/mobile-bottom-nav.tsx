@@ -40,6 +40,8 @@ export function MobileBottomNav() {
             {label}
           </span>
           <span
+            aria-hidden="true"
+            // invisible keeps the dot in layout flow; prevents tab labels from shifting when active tab changes
             className={cn(
               'h-1 w-5 rounded-full mt-0.5 transition-colors',
               pathname === href ? 'bg-amber-600' : 'invisible'

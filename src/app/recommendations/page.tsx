@@ -78,7 +78,7 @@ export default function RecommendationsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-amber-900 mb-1">Recommendations</h1>
         <p className="text-sm text-stone-500">
